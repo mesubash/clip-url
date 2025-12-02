@@ -15,24 +15,27 @@ interface StatsCardProps {
 export function StatsCard({ title, value, icon: Icon, trend, className }: StatsCardProps) {
   return (
     <div className={cn(
-      "bg-card border rounded-xl p-5 shadow-soft transition-all duration-200 hover:shadow-card",
+      "card-interactive p-5 group",
       className
     )}>
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-semibold text-foreground">{value}</p>
+        <div className="space-y-1.5">
+          <p className="text-sm text-muted-foreground font-medium">{title}</p>
+          <p className="text-3xl font-bold text-foreground tracking-tight">{value}</p>
           {trend && (
-            <p className={cn(
-              "text-xs font-medium",
-              trend.isPositive ? "text-success" : "text-destructive"
+            <div className={cn(
+              "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full",
+              trend.isPositive 
+                ? "text-success bg-success/10" 
+                : "text-destructive bg-destructive/10"
             )}>
-              {trend.isPositive ? "+" : ""}{trend.value}% from last week
-            </p>
+              <span>{trend.isPositive ? "↑" : "↓"}</span>
+              {Math.abs(trend.value)}% from last week
+            </div>
           )}
         </div>
-        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-          <Icon className="w-5 h-5 text-accent-foreground" />
+        <div className="w-11 h-11 rounded-xl bg-accent border border-primary/10 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-glow">
+          <Icon className="w-5 h-5 text-primary" />
         </div>
       </div>
     </div>

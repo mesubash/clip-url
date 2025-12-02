@@ -91,12 +91,12 @@ const Dashboard = () => {
       <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
+          <div className="space-y-1">
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">Manage and track your shortened URLs</p>
           </div>
           <Link to="/">
-            <Button>
+            <Button className="gradient-primary btn-glow text-primary-foreground">
               <Plus className="w-4 h-4" />
               Create Link
             </Button>
@@ -127,13 +127,13 @@ const Dashboard = () => {
 
         {/* Search & Filter */}
         <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative flex-1 max-w-md group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <Input
               placeholder="Search links..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11 input-focus"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ const Dashboard = () => {
             filteredUrls.map((url, index) => (
               <div
                 key={url.id}
-                className="animate-fade-in"
+                className="animate-in-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <URLCard
@@ -155,14 +155,22 @@ const Dashboard = () => {
               </div>
             ))
           ) : (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Link2 className="w-6 h-6 text-muted-foreground" />
+            <div className="text-center py-16">
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <Link2 className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-foreground mb-1">No links found</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg font-semibold text-foreground mb-1">No links found</h3>
+              <p className="text-muted-foreground mb-4">
                 {searchQuery ? "Try a different search term" : "Create your first shortened URL"}
               </p>
+              {!searchQuery && (
+                <Link to="/">
+                  <Button className="gradient-primary btn-glow text-primary-foreground">
+                    <Plus className="w-4 h-4" />
+                    Create Link
+                  </Button>
+                </Link>
+              )}
             </div>
           )}
         </div>
