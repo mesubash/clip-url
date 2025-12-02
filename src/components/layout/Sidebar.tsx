@@ -53,17 +53,18 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/80 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4">
+      {/* Mobile Header - Always visible on small screens */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4 lg:hidden">
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
-          <span className="font-bold text-foreground">ClipURL</span>
+          <span className="font-bold text-foreground text-lg">ClipURL</span>
         </Link>
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="icon" 
           onClick={toggleMobileMenu}
-          className="hover:bg-accent"
+          className="h-10 w-10"
+          aria-label="Toggle menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
@@ -72,22 +73,34 @@ export function Sidebar() {
       {/* Mobile Navigation Overlay */}
       {mobileOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40"
+          className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 pt-16"
           onClick={closeMobileMenu}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 left-0 h-full w-[260px] bg-sidebar border-r border-sidebar-border z-50 transition-transform duration-300 ease-out",
-        "lg:translate-x-0",
-        mobileOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed top-0 left-0 h-full w-[280px] bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-out",
+        "lg:translate-x-0 lg:z-40",
+        mobileOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"
       )}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
-            <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
-            <span className="font-bold text-foreground">ClipURL</span>
+          <div className="h-16 flex items-center justify-between gap-2.5 px-5 border-b border-sidebar-border">
+            <Link to="/" className="flex items-center gap-2.5" onClick={closeMobileMenu}>
+              <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
+              <span className="font-bold text-foreground">ClipURL</span>
+            </Link>
+            {/* Close button for mobile */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={closeMobileMenu}
+              className="lg:hidden h-8 w-8"
+              aria-label="Close menu"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
 
           {/* Navigation */}

@@ -146,15 +146,15 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Manage and track your clipped URLs</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-0.5 sm:space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage and track your clipped URLs</p>
           </div>
           <Link to="/">
-            <Button className="gradient-primary btn-glow text-primary-foreground">
+            <Button className="gradient-primary btn-glow text-primary-foreground w-full sm:w-auto">
               <Plus className="w-4 h-4" />
               Create Link
             </Button>
@@ -162,7 +162,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {isLoading ? (
             <>
               <StatsCardSkeleton />
@@ -191,14 +191,14 @@ const Dashboard = () => {
         </div>
 
         {/* Search & Filter */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="relative flex-1 sm:max-w-md group">
+            <Search className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <Input
               placeholder="Search links..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 input-focus"
+              className="pl-9 sm:pl-10 h-10 sm:h-11 input-focus text-sm sm:text-base"
             />
           </div>
         </div>

@@ -56,61 +56,51 @@ export const URLCard = memo(function URLCard({
   const { label, variant, icon: StatusIcon } = statusConfig[status];
 
   return (
-    <div className="card-interactive p-4 group hover:shadow-lg hover:border-primary/20 transition-all">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* URL Info */}
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2">
-            <a
-              href={shortUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-primary hover:underline truncate"
-            >
-              {shortUrl.replace("https://", "")}
-            </a>
-            <CopyButton value={shortUrl} size="sm" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" />
-            {expiresAt && (
-              <Badge variant={variant} className="text-xs gap-1 h-5">
-                <StatusIcon className="w-3 h-3" />
-                {label}
-              </Badge>
-            )}
+    <div className="card-interactive p-3 sm:p-4 group hover:shadow-lg hover:border-primary/20 transition-all">
+      <div className="flex flex-col gap-3">
+        {/* URL Info - Top Row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <a
+                href={shortUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-primary hover:underline truncate max-w-[200px] sm:max-w-none"
+              >
+                {shortUrl.replace("https://", "")}
+              </a>
+              <CopyButton value={shortUrl} size="sm" className="h-6 w-6 shrink-0" />
+              {expiresAt && (
+                <Badge variant={variant} className="text-xs gap-1 h-5 shrink-0 hidden sm:inline-flex">
+                  <StatusIcon className="w-3 h-3" />
+                  {label}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{originalUrl}</p>
           </div>
-          <p className="text-sm text-muted-foreground truncate">{originalUrl}</p>
-        </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-5 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-lg">
-            <MousePointerClick className="w-3.5 h-3.5" />
-            <span className="font-medium text-foreground">{clicks.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{createdAt}</span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Link to={`/analytics?url=${id}`}>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent">
-              <BarChart3 className="w-4 h-4" />
-            </Button>
-          </Link>
-          <a href={originalUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          </a>
+          {/* Actions - Always visible dropdown on mobile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent">
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 hover:bg-accent">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link to={`/analytics?url=${id}`}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analytics
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <a href={originalUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open URL
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit
@@ -121,6 +111,42 @@ export const URLCard = memo(function URLCard({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Stats & Status - Bottom Row */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 bg-muted/50 px-2 sm:px-2.5 py-1 rounded-lg">
+              <MousePointerClick className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <span className="font-medium text-foreground">{clicks.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <span>{createdAt}</span>
+            </div>
+          </div>
+          
+          {/* Status badge on mobile - shown at bottom */}
+          {expiresAt && (
+            <Badge variant={variant} className="text-xs gap-1 h-5 sm:hidden">
+              <StatusIcon className="w-3 h-3" />
+              {label}
+            </Badge>
+          )}
+
+          {/* Desktop quick actions */}
+          <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Link to={`/analytics?url=${id}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent">
+                <BarChart3 className="w-4 h-4" />
+              </Button>
+            </Link>
+            <a href={originalUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
     </div>
