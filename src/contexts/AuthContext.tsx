@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { authService } from "@/lib/auth";
 import type { User } from "@/lib/types";
 
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Initialize with cached user for instant loading
   const [user, setUserState] = useState<User | null>(() => getCachedUser());
   const [isLoading, setIsLoading] = useState(() => !getCachedUser()); // Only show loading if no cache
+  const initRef = useRef(false);
 
   // Wrapper to also update cache when setting user
   const setUser = useCallback((newUser: User | null) => {
@@ -74,16 +75,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setUser]);
 
   useEffect(() => {
+    // Prevent double initialization in React 18 Strict Mode
+    if (initRef.current) return;
+    initRef.current = true;
+
     const initAuth = async () => {
       const cachedUser = getCachedUser();
       
       if (cachedUser) {
-        // We have cached user - validate in background without blocking
+        // We have cached user - show UI immediately, validate in background
         setIsLoading(false);
-        // Silently refresh to validate session
-        refreshUser().catch(() => {
-          // Session invalid, user will be cleared by refreshUser
-        });
+        // Silently refresh to validate session (don't await)
+        refreshUser();
       } else {
         // No cache - must wait for API
         await refreshUser();
@@ -91,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
     initAuth();
-  }, [refreshUser]);
+  }, []); // Empty deps - run once on mount
 
   const login = async (email: string, password: string) => {
     const userData = await authService.login({ email, password });
