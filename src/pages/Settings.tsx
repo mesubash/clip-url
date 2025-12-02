@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,24 +7,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { Key, RefreshCw, Trash2, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/lib/auth";
 
 const Settings = () => {
-  const [name, setName] = useState("John Doe");
-  const [email, setEmail] = useState("john@example.com");
+  const { user, refreshUser } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [apiKey, setApiKey] = useState("sk_live_xxxxxxxxxxxxxxxxxxxx");
+  const [apiKey, setApiKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setApiKey(user.api_key || null);
+    }
+  }, [user]);
 
   const handleProfileSave = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: "Profile updated",
-      description: "Your changes have been saved",
-    });
-    setIsLoading(false);
+    try {
+      await authService.updateProfile({ name, email });
+      await refreshUser();
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -37,37 +58,65 @@ const Settings = () => {
     }
     
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: "Password updated",
-      description: "Your password has been changed successfully",
-    });
-    setCurrentPassword("");
-    setNewPassword("");
-    setIsLoading(false);
+    try {
+      await authService.changePassword({ current_password: currentPassword, new_password: newPassword });
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGenerateApiKey = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const newKey = `sk_live_${Math.random().toString(36).substring(2, 26)}`;
-    setApiKey(newKey);
-    toast({
-      title: "API key generated",
-      description: "Your new API key is ready",
-    });
-    setIsLoading(false);
+    try {
+      const response = await authService.generateApiKey();
+      setApiKey(response.api_key);
+      await refreshUser();
+      toast({
+        title: "API key generated",
+        description: "Your new API key is ready",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate API key",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRevokeApiKey = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setApiKey("");
-    toast({
-      title: "API key revoked",
-      description: "Your API key has been revoked",
-    });
-    setIsLoading(false);
+    try {
+      await authService.revokeApiKey();
+      setApiKey(null);
+      await refreshUser();
+      toast({
+        title: "API key revoked",
+        description: "Your API key has been revoked",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to revoke API key",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

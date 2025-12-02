@@ -6,85 +6,78 @@ import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { URLCard } from "@/components/shared/URLCard";
 import { EditURLModal } from "@/components/shared/EditURLModal";
+import { Loader } from "@/components/shared/Loader";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-
-// Mock data
-const mockUrls = [
-  {
-    id: "1",
-    originalUrl: "https://example.com/blog/how-to-build-a-url-shortener-with-react",
-    shortUrl: "https://shrt.io/react-url",
-    clicks: 1247,
-    createdAt: "Nov 28",
-    alias: "react-url",
-  },
-  {
-    id: "2",
-    originalUrl: "https://github.com/my-awesome-project/documentation/readme",
-    shortUrl: "https://shrt.io/gh-docs",
-    clicks: 892,
-    createdAt: "Nov 25",
-    alias: "gh-docs",
-  },
-  {
-    id: "3",
-    originalUrl: "https://youtube.com/watch?v=dQw4w9WgXcQ",
-    shortUrl: "https://shrt.io/yt-vid",
-    clicks: 3421,
-    createdAt: "Nov 20",
-    alias: "yt-vid",
-  },
-  {
-    id: "4",
-    originalUrl: "https://docs.company.com/api/v2/authentication/oauth2",
-    shortUrl: "https://shrt.io/api-auth",
-    clicks: 156,
-    createdAt: "Nov 18",
-    alias: "api-auth",
-  },
-];
+import { useUrls, useDeleteUrl, useUpdateUrl } from "@/hooks/useUrls";
+import type { URLData } from "@/lib/types";
 
 const Dashboard = () => {
-  const [urls, setUrls] = useState(mockUrls);
   const [searchQuery, setSearchQuery] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedUrl, setSelectedUrl] = useState<typeof mockUrls[0] | null>(null);
+  const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
+  
+  const { data, isLoading, error } = useUrls(searchQuery || undefined);
+  const deleteUrl = useDeleteUrl();
+  const updateUrl = useUpdateUrl();
 
-  const filteredUrls = urls.filter(
-    (url) =>
-      url.originalUrl.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      url.shortUrl.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const urls = data?.urls || [];
+  const totalClicks = data?.total_clicks || 0;
 
-  const handleEdit = (url: typeof mockUrls[0]) => {
+  const handleEdit = (url: URLData) => {
     setSelectedUrl(url);
     setEditModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setUrls(urls.filter((url) => url.id !== id));
-    toast({
-      title: "Link deleted",
-      description: "The shortened URL has been removed",
-    });
-  };
-
-  const handleSaveEdit = (data: { alias: string; expiresAt?: string }) => {
-    if (selectedUrl) {
-      setUrls(urls.map((url) =>
-        url.id === selectedUrl.id
-          ? { ...url, alias: data.alias, shortUrl: `https://shrt.io/${data.alias}` }
-          : url
-      ));
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteUrl.mutateAsync(id);
       toast({
-        title: "Link updated",
-        description: "Your changes have been saved",
+        title: "Link deleted",
+        description: "The shortened URL has been removed",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete link",
+        variant: "destructive",
       });
     }
   };
 
-  const totalClicks = urls.reduce((acc, url) => acc + url.clicks, 0);
+  const handleSaveEdit = async (editData: { alias: string; expiresAt?: string }) => {
+    if (selectedUrl) {
+      try {
+        await updateUrl.mutateAsync({
+          id: selectedUrl.id,
+          data: { alias: editData.alias, expires_at: editData.expiresAt || null },
+        });
+        toast({
+          title: "Link updated",
+          description: "Your changes have been saved",
+        });
+        setEditModalOpen(false);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to update link",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="p-6 md:p-8 max-w-6xl mx-auto">
+          <div className="text-center py-16">
+            <p className="text-destructive">Failed to load URLs. Please try again.</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -109,19 +102,16 @@ const Dashboard = () => {
             title="Total Links"
             value={urls.length}
             icon={Link2}
-            trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
             title="Total Clicks"
             value={totalClicks.toLocaleString()}
             icon={MousePointerClick}
-            trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
-            title="Countries Reached"
-            value={24}
+            title="Active Links"
+            value={urls.length}
             icon={Globe}
-            trend={{ value: 5, isPositive: true }}
           />
         </div>
 
@@ -140,15 +130,23 @@ const Dashboard = () => {
 
         {/* URL List */}
         <div className="space-y-3">
-          {filteredUrls.length > 0 ? (
-            filteredUrls.map((url, index) => (
+          {isLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader size="lg" />
+            </div>
+          ) : urls.length > 0 ? (
+            urls.map((url, index) => (
               <div
                 key={url.id}
                 className="animate-in-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <URLCard
-                  {...url}
+                  id={String(url.id)}
+                  originalUrl={url.original_url}
+                  shortUrl={url.short_url}
+                  clicks={url.click_count}
+                  createdAt={new Date(url.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   onEdit={() => handleEdit(url)}
                   onDelete={() => handleDelete(url.id)}
                 />
@@ -179,7 +177,14 @@ const Dashboard = () => {
         <EditURLModal
           open={editModalOpen}
           onOpenChange={setEditModalOpen}
-          url={selectedUrl || undefined}
+          url={selectedUrl ? {
+            id: String(selectedUrl.id),
+            originalUrl: selectedUrl.original_url,
+            shortUrl: selectedUrl.short_url,
+            clicks: selectedUrl.click_count,
+            createdAt: selectedUrl.created_at,
+            alias: selectedUrl.slug,
+          } : undefined}
           onSave={handleSaveEdit}
         />
       </div>

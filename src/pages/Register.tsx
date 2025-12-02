@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -15,20 +16,28 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Account created!",
-      description: "Welcome to Shortify. Start shortening your links!",
-    });
-    
-    setIsLoading(false);
-    navigate("/dashboard");
+    try {
+      await register(name, email, password);
+      toast({
+        title: "Account created!",
+        description: "Welcome to ClipURL. Start shortening your links!",
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "Could not create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const passwordStrength = password.length >= 8;

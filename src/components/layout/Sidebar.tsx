@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Home, 
   LayoutDashboard, 
@@ -6,6 +6,7 @@ import {
   Settings, 
   Link2, 
   LogOut,
+  LogIn,
   Menu,
   X,
   Zap
@@ -13,17 +14,28 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { icon: Home, label: "Shorten", path: "/" },
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", auth: true },
+  { icon: BarChart3, label: "Analytics", path: "/analytics", auth: true },
+  { icon: Settings, label: "Settings", path: "/settings", auth: true },
 ];
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    setMobileOpen(false);
+  };
+
+  const filteredNavItems = navItems.filter(item => !item.auth || isAuthenticated);
 
   return (
     <>
@@ -70,7 +82,7 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
@@ -114,13 +126,30 @@ export function Sidebar() {
 
           {/* Footer */}
           <div className="p-3 border-t border-sidebar-border">
-            <Link
-              to="/login"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-all duration-200"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </Link>
+            {isAuthenticated ? (
+              <div className="space-y-2">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-all duration-200 w-full"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-all duration-200"
+              >
+                <LogIn className="w-5 h-5" />
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </aside>

@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { QRCodePreview } from "@/components/shared/QRCodePreview";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCreateUrl } from "@/hooks/useUrls";
+import { useNavigate } from "react-router-dom";
 
 const features = [
   { icon: Zap, title: "Lightning Fast", desc: "Links created instantly" },
@@ -18,7 +21,9 @@ const Index = () => {
   const [longUrl, setLongUrl] = useState("");
   const [customAlias, setCustomAlias] = useState("");
   const [shortUrl, setShortUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const createUrl = useCreateUrl();
+  const navigate = useNavigate();
 
   const handleShorten = async () => {
     if (!longUrl) {
@@ -30,17 +35,33 @@ const Index = () => {
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    
-    const alias = customAlias || Math.random().toString(36).substring(2, 8);
-    setShortUrl(`https://shrt.io/${alias}`);
-    setIsLoading(false);
-    
-    toast({
-      title: "Link created!",
-      description: "Your shortened URL is ready to use",
-    });
+    // If not authenticated, redirect to login
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to create shortened URLs",
+      });
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const result = await createUrl.mutateAsync({
+        original_url: longUrl,
+        custom_alias: customAlias || null,
+      });
+      setShortUrl(result.short_url);
+      toast({
+        title: "Link created!",
+        description: "Your shortened URL is ready to use",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create link",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReset = () => {
@@ -117,11 +138,11 @@ const Index = () => {
                   {/* Shorten Button */}
                   <Button
                     onClick={handleShorten}
-                    disabled={isLoading}
+                    disabled={createUrl.isPending}
                     size="xl"
                     className="w-full gradient-primary btn-glow text-primary-foreground font-medium"
                   >
-                    {isLoading ? (
+                    {createUrl.isPending ? (
                       <span className="flex items-center gap-2">
                         <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                         Creating...
