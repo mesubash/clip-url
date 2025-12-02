@@ -1,7 +1,8 @@
-import { memo } from "react";
-import { ExternalLink, BarChart3, Pencil, Trash2, MoreVertical, Calendar, MousePointerClick } from "lucide-react";
+import { memo, useMemo } from "react";
+import { ExternalLink, BarChart3, Pencil, Trash2, MoreVertical, Calendar, MousePointerClick, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "./CopyButton";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,26 @@ interface URLCardProps {
   onDelete?: () => void;
 }
 
+type LinkStatus = "active" | "expiring" | "expired";
+
+function getLinkStatus(expiresAt?: string): LinkStatus {
+  if (!expiresAt) return "active";
+  
+  const now = new Date();
+  const expiry = new Date(expiresAt);
+  const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (daysUntilExpiry < 0) return "expired";
+  if (daysUntilExpiry <= 7) return "expiring";
+  return "active";
+}
+
+const statusConfig: Record<LinkStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }> = {
+  active: { label: "Active", variant: "default", icon: CheckCircle2 },
+  expiring: { label: "Expiring Soon", variant: "secondary", icon: AlertTriangle },
+  expired: { label: "Expired", variant: "destructive", icon: Clock },
+};
+
 export const URLCard = memo(function URLCard({
   id,
   originalUrl,
@@ -31,6 +52,9 @@ export const URLCard = memo(function URLCard({
   onEdit,
   onDelete,
 }: URLCardProps) {
+  const status = useMemo(() => getLinkStatus(expiresAt), [expiresAt]);
+  const { label, variant, icon: StatusIcon } = statusConfig[status];
+
   return (
     <div className="card-interactive p-4 group hover:shadow-lg hover:border-primary/20 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -46,6 +70,12 @@ export const URLCard = memo(function URLCard({
               {shortUrl.replace("https://", "")}
             </a>
             <CopyButton value={shortUrl} size="sm" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" />
+            {expiresAt && (
+              <Badge variant={variant} className="text-xs gap-1 h-5">
+                <StatusIcon className="w-3 h-3" />
+                {label}
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground truncate">{originalUrl}</p>
         </div>

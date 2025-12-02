@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { URLCard } from "@/components/shared/URLCard";
 import { EditURLModal } from "@/components/shared/EditURLModal";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -55,7 +56,9 @@ function URLCardSkeleton() {
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
+  const [urlToDelete, setUrlToDelete] = useState<number | null>(null);
   
   // Debounce search query to reduce API calls
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -72,13 +75,22 @@ const Dashboard = () => {
     setEditModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDeleteClick = useCallback((id: number) => {
+    setUrlToDelete(id);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!urlToDelete) return;
+    
     try {
-      await deleteUrl.mutateAsync(id);
+      await deleteUrl.mutateAsync(urlToDelete);
       toast({
         title: "Link deleted",
         description: "The clipped URL has been removed",
       });
+      setDeleteDialogOpen(false);
+      setUrlToDelete(null);
     } catch (error) {
       toast({
         title: "Error",
@@ -86,7 +98,7 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  }, [deleteUrl]);
+  }, [urlToDelete, deleteUrl]);
 
   const handleSaveEdit = useCallback(async (editData: { alias: string; expiresAt?: string }) => {
     if (selectedUrl) {
@@ -114,7 +126,8 @@ const Dashboard = () => {
   const formattedUrls = useMemo(() => 
     urls.map(url => ({
       ...url,
-      formattedDate: new Date(url.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      formattedDate: new Date(url.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      formattedExpiresAt: url.expires_at || undefined,
     })),
     [urls]
   );
@@ -212,8 +225,9 @@ const Dashboard = () => {
                   shortUrl={url.short_url}
                   clicks={url.click_count}
                   createdAt={url.formattedDate}
+                  expiresAt={url.formattedExpiresAt}
                   onEdit={() => handleEdit(url)}
-                  onDelete={() => handleDelete(url.id)}
+                  onDelete={() => handleDeleteClick(url.id)}
                 />
               </div>
             ))
@@ -249,8 +263,17 @@ const Dashboard = () => {
             clicks: selectedUrl.click_count,
             createdAt: selectedUrl.created_at,
             alias: selectedUrl.slug,
+            expiresAt: selectedUrl.expires_at || undefined,
           } : undefined}
           onSave={handleSaveEdit}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleDeleteConfirm}
+          isLoading={deleteUrl.isPending}
         />
       </div>
     </AppLayout>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +22,17 @@ interface EditURLModalProps {
 }
 
 export function EditURLModal({ open, onOpenChange, url, onSave }: EditURLModalProps) {
-  const [alias, setAlias] = useState(url?.alias || "");
-  const [expiresAt, setExpiresAt] = useState(url?.expiresAt || "");
+  const [alias, setAlias] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+
+  // Sync state when url prop changes
+  useEffect(() => {
+    if (url) {
+      setAlias(url.alias || "");
+      // Format date for input if exists
+      setExpiresAt(url.expiresAt ? url.expiresAt.split("T")[0] : "");
+    }
+  }, [url]);
 
   const handleSave = () => {
     onSave({ alias, expiresAt: expiresAt || undefined });
@@ -53,7 +62,18 @@ export function EditURLModal({ open, onOpenChange, url, onSave }: EditURLModalPr
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
             />
+            {expiresAt && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-auto p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setExpiresAt("")}
+              >
+                Clear expiration
+              </Button>
+            )}
           </div>
         </div>
         <DialogFooter>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link2, Sparkles, ArrowRight, Check, Zap, Shield, Globe } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Link2, Sparkles, ArrowRight, Check, Zap, Shield, Globe, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +20,38 @@ const features = [
 const Index = () => {
   const [longUrl, setLongUrl] = useState("");
   const [customAlias, setCustomAlias] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const { isAuthenticated } = useAuth();
   const createUrl = useCreateUrl();
   const navigate = useNavigate();
+
+  // Keyboard shortcuts: Cmd+V to paste, Cmd+Enter to submit
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Cmd/Ctrl + Enter to submit
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && longUrl && !shortUrl) {
+      e.preventDefault();
+      document.getElementById("shorten-btn")?.click();
+    }
+  }, [longUrl, shortUrl]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Auto-paste from clipboard when focusing empty input
+  const handleUrlFocus = useCallback(async () => {
+    if (longUrl) return;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && (text.startsWith("http://") || text.startsWith("https://"))) {
+        setLongUrl(text);
+      }
+    } catch {
+      // Clipboard access denied - ignore silently
+    }
+  }, [longUrl]);
 
   const handleShorten = async () => {
     if (!longUrl) {
@@ -49,6 +77,7 @@ const Index = () => {
       const result = await createUrl.mutateAsync({
         original_url: longUrl,
         custom_alias: customAlias || null,
+        expires_at: expiresAt || null,
       });
       setShortUrl(result.short_url);
       toast({
@@ -67,6 +96,7 @@ const Index = () => {
   const handleReset = () => {
     setLongUrl("");
     setCustomAlias("");
+    setExpiresAt("");
     setShortUrl("");
   };
 
@@ -113,6 +143,7 @@ const Index = () => {
                         placeholder="https://example.com/very-long-url-here"
                         value={longUrl}
                         onChange={(e) => setLongUrl(e.target.value)}
+                        onFocus={handleUrlFocus}
                         className="pl-11 h-12 input-focus text-base"
                       />
                     </div>
@@ -135,8 +166,27 @@ const Index = () => {
                     </div>
                   </div>
 
+                  {/* Expiration Date Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="expires" className="text-sm font-medium">
+                      Expiration Date <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <div className="relative group">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                      <Input
+                        id="expires"
+                        type="date"
+                        value={expiresAt}
+                        onChange={(e) => setExpiresAt(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="pl-11 h-12 input-focus"
+                      />
+                    </div>
+                  </div>
+
                   {/* Shorten Button */}
                   <Button
+                    id="shorten-btn"
                     onClick={handleShorten}
                     disabled={createUrl.isPending}
                     size="xl"
@@ -191,7 +241,7 @@ const Index = () => {
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">QR Code</Label>
                       <div className="p-4 bg-background border rounded-xl shadow-xs">
-                        <QRCodePreview value={shortUrl} size={100} />
+                        <QRCodePreview value={shortUrl} size={100} showDownload />
                       </div>
                     </div>
                   </div>
