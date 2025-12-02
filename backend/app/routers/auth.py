@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_db
 from app.schemas import (
     UserCreate,
@@ -15,26 +16,74 @@ from app.routers.deps import get_current_user
 from app.models import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+settings = get_settings()
+
+# Cookie settings
+COOKIE_NAME = "access_token"
+COOKIE_MAX_AGE = settings.access_token_expire_minutes * 60  # Convert to seconds
 
 
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+def set_auth_cookie(response: Response, token: str):
+    """Set HTTP-only secure cookie with the access token."""
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        secure=not settings.debug,  # Secure only in production (HTTPS)
+        samesite="lax",
+        path="/",
+    )
+
+
+def clear_auth_cookie(response: Response):
+    """Clear the auth cookie."""
+    response.delete_cookie(
+        key=COOKIE_NAME,
+        httponly=True,
+        secure=not settings.debug,
+        samesite="lax",
+        path="/",
+    )
+
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(
+    user_data: UserCreate,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
     """Register a new user."""
     service = AuthService(db)
     try:
-        return await service.create_user(user_data)
+        token_data = await service.create_user(user_data)
+        set_auth_cookie(response, token_data.access_token)
+        return token_data.user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    """Authenticate user and return token."""
+@router.post("/login", response_model=UserResponse)
+async def login(
+    credentials: UserLogin,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """Authenticate user and set auth cookie."""
     service = AuthService(db)
     try:
-        return await service.authenticate_user(credentials.email, credentials.password)
+        token_data = await service.authenticate_user(credentials.email, credentials.password)
+        set_auth_cookie(response, token_data.access_token)
+        return token_data.user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """Clear auth cookie and log out."""
+    clear_auth_cookie(response)
+    return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserResponse)

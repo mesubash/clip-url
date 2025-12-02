@@ -5,7 +5,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     # App
     app_name: str = "ClipURL API"
-    debug: bool = False
+    debug: bool = True  # Set to False in production
     
     # Database
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/clipurl"

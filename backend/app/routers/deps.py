@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,15 +7,30 @@ from app.utils import verify_token
 from app.services import AuthService
 from app.models import User
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Get the current authenticated user from JWT token."""
-    token = credentials.credentials
+    """Get the current authenticated user from JWT token (cookie or header)."""
+    token = None
+    
+    # First check HTTP-only cookie
+    token = request.cookies.get("access_token")
+    
+    # Fallback to Authorization header (for API key usage)
+    if not token and credentials:
+        token = credentials.credentials
+    
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     # First try JWT token
     token_data = verify_token(token)
@@ -39,16 +54,12 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(
-        HTTPBearer(auto_error=False)
-    ),
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
     """Get the current user if authenticated, otherwise None."""
-    if not credentials:
-        return None
-    
     try:
-        return await get_current_user(credentials, db)
+        return await get_current_user(request, credentials, db)
     except HTTPException:
         return None
