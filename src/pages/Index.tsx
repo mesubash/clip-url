@@ -182,13 +182,8 @@ const Index = () => {
                         value={customAlias}
                         onChange={(e) => setCustomAlias(e.target.value)}
                         className="h-12 input-focus"
-                        minLength={3}
-                        maxLength={50}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Min 3 characters. Letters, numbers, hyphens, and underscores only.
-                    </p>
                   </div>
 
                   {/* Expiration Date Input */}

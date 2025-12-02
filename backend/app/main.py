@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,6 +9,20 @@ from app.database import init_db
 from app.routers import auth_router, urls_router, redirect_router, admin_router
 
 settings = get_settings()
+
+# Configure logging based on DEBUG setting
+logging.basicConfig(
+    level=logging.DEBUG if settings.debug else logging.WARNING,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s" if settings.debug else "%(levelname)s - %(message)s",
+)
+
+# Suppress noisy loggers in production
+if not settings.debug:
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 @asynccontextmanager
@@ -23,6 +39,9 @@ app = FastAPI(
     description="A modern, high-performance URL shortener API by ClipURL",
     version="1.0.0",
     lifespan=lifespan,
+    # Disable docs in production
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
 )
 
 # CORS middleware

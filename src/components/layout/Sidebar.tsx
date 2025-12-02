@@ -53,8 +53,8 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Header - Always visible on small/medium screens */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4 xl:hidden">
+      {/* Mobile Header - Always visible on small screens */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4 lg:hidden">
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
           <span className="font-bold text-foreground text-lg">ClipURL</span>
@@ -73,7 +73,7 @@ export function Sidebar() {
       {/* Mobile Navigation Overlay */}
       {mobileOpen && (
         <div 
-          className="xl:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 pt-16"
+          className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 pt-16"
           onClick={closeMobileMenu}
         />
       )}
@@ -81,7 +81,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside className={cn(
         "fixed top-0 left-0 h-full w-[280px] bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-out",
-        "xl:translate-x-0 xl:z-40",
+        "lg:translate-x-0 lg:z-40",
         mobileOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"
       )}>
         <div className="flex flex-col h-full">
@@ -96,7 +96,7 @@ export function Sidebar() {
               variant="ghost" 
               size="icon" 
               onClick={closeMobileMenu}
-              className="xl:hidden h-8 w-8"
+              className="lg:hidden h-8 w-8"
               aria-label="Close menu"
             >
               <X className="w-4 h-4" />

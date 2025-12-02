@@ -116,7 +116,7 @@ export function EditURLModal({ open, onOpenChange, url, onSave }: EditURLModalPr
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!!error}>Save Changes</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
