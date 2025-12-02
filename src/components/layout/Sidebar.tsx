@@ -10,7 +10,8 @@ import {
   Scissors,
   Users,
   Shield,
-  Database
+  Database,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,11 +23,13 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", auth: true },
   { icon: BarChart3, label: "Analytics", path: "/analytics", auth: true },
   { icon: Settings, label: "Settings", path: "/settings", auth: true },
+  { icon: MessageSquare, label: "Feedback", path: "/feedback" },
 ] as const;
 
 const adminNavItems = [
   { icon: Users, label: "User Management", path: "/admin/users" },
   { icon: Database, label: "Cleanup Tools", path: "/admin/tools" },
+  { icon: MessageSquare, label: "Feedback", path: "/admin/feedback" },
 ] as const;
 
 export function Sidebar() {

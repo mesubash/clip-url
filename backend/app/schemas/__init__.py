@@ -29,6 +29,14 @@ from app.schemas.url import (
     DeviceData,
     RecentActivity,
 )
+from app.schemas.feedback import (
+    FeedbackCreate,
+    FeedbackResponse,
+    FeedbackAdminResponse,
+    FeedbackUpdate,
+    FeedbackStats,
+    PaginatedFeedbackResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -58,4 +66,10 @@ __all__ = [
     "CountryData",
     "DeviceData",
     "RecentActivity",
+    "FeedbackCreate",
+    "FeedbackResponse",
+    "FeedbackAdminResponse",
+    "FeedbackUpdate",
+    "FeedbackStats",
+    "PaginatedFeedbackResponse",
 ]

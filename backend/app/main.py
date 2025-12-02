@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import auth_router, urls_router, redirect_router, admin_router
+from app.routers import auth_router, urls_router, redirect_router, admin_router, feedback_router
 
 settings = get_settings()
 
@@ -64,6 +64,7 @@ app.include_router(auth_router)
 app.include_router(urls_router)
 app.include_router(redirect_router)
 app.include_router(admin_router)
+app.include_router(feedback_router)
 
 
 @app.get("/")
