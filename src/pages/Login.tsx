@@ -1,24 +1,24 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     toast({
@@ -27,19 +27,22 @@ const Login = () => {
     });
     
     setIsLoading(false);
+    navigate("/dashboard");
   };
 
   return (
     <AuthLayout>
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+      <Card className="w-full max-w-md card-elevated animate-in-scale border-0 shadow-xl">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Enter your credentials to access your account
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -47,14 +50,15 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11 input-focus"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -67,6 +71,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="h-11 pr-10 input-focus"
                 />
                 <Button
                   type="button"
@@ -84,13 +89,27 @@ const Login = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
+          <CardFooter className="flex flex-col gap-4 pt-2">
+            <Button 
+              type="submit" 
+              className="w-full h-11 gradient-primary btn-glow text-primary-foreground font-medium" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Sign In
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
+              <Link to="/register" className="text-primary font-medium hover:text-primary/80 transition-colors">
                 Sign up
               </Link>
             </p>

@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatsCard } from "@/components/shared/StatsCard";
-import { MousePointerClick, Globe, Smartphone, Monitor, Clock } from "lucide-react";
+import { MousePointerClick, Globe, Smartphone, Monitor, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AreaChart,
@@ -50,7 +50,7 @@ const Analytics = () => {
     <AppLayout>
       <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto">
         {/* Header */}
-        <div>
+        <div className="space-y-1">
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
           <p className="text-muted-foreground">Track performance across all your links</p>
         </div>
@@ -71,56 +71,60 @@ const Analytics = () => {
           <StatsCard
             title="Avg. Daily Clicks"
             value="109"
-            icon={Clock}
+            icon={TrendingUp}
             trend={{ value: 5, isPositive: true }}
           />
           <StatsCard
             title="Countries"
             value="24"
-            icon={Globe}
+            icon={Clock}
           />
         </div>
 
         {/* Click Trends Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Click Trends</CardTitle>
+        <Card className="card-interactive overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold">Click Trends</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={clickData}>
                   <defs>
                     <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(195, 80%, 35%)" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="hsl(195, 80%, 35%)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 32%, 91%)" vertical={false} />
                   <XAxis
                     dataKey="date"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "hsl(220, 10%, 45%)", fontSize: 12 }}
+                    tick={{ fill: "hsl(215, 16%, 47%)", fontSize: 12 }}
+                    dy={10}
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "hsl(220, 10%, 45%)", fontSize: 12 }}
+                    tick={{ fill: "hsl(215, 16%, 47%)", fontSize: 12 }}
+                    dx={-10}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(0, 0%, 100%)",
-                      border: "1px solid hsl(220, 13%, 91%)",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                      border: "1px solid hsl(214, 32%, 91%)",
+                      borderRadius: "12px",
+                      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.06)",
+                      padding: "12px 16px",
                     }}
+                    labelStyle={{ color: "hsl(222, 47%, 11%)", fontWeight: 600, marginBottom: 4 }}
                   />
                   <Area
                     type="monotone"
                     dataKey="clicks"
-                    stroke="hsl(195, 80%, 35%)"
-                    strokeWidth={2}
+                    stroke="hsl(199, 89%, 48%)"
+                    strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#colorClicks)"
                   />
@@ -133,24 +137,24 @@ const Analytics = () => {
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Countries */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Top Countries</CardTitle>
+          <Card className="card-interactive">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold">Top Countries</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               {topCountries.map((item, index) => (
                 <div key={item.country} className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground w-4">{index + 1}</span>
+                  <span className="text-sm font-medium text-muted-foreground w-5">{index + 1}</span>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">{item.country}</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">{item.country}</span>
                       <span className="text-sm text-muted-foreground">
                         {item.clicks.toLocaleString()}
                       </span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-700"
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
@@ -161,24 +165,24 @@ const Analytics = () => {
           </Card>
 
           {/* Devices */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Devices</CardTitle>
+          <Card className="card-interactive">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold">Devices</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               {devices.map((device) => (
                 <div key={device.type} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                    <device.icon className="w-5 h-5 text-accent-foreground" />
+                  <div className="w-11 h-11 rounded-xl bg-accent border border-primary/10 flex items-center justify-center">
+                    <device.icon className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">{device.type}</span>
-                      <span className="text-sm text-muted-foreground">{device.percentage}%</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">{device.type}</span>
+                      <span className="text-sm font-semibold text-foreground">{device.percentage}%</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-700"
                         style={{ width: `${device.percentage}%` }}
                       />
                     </div>
@@ -190,21 +194,24 @@ const Analytics = () => {
         </div>
 
         {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Recent Activity</CardTitle>
+        <Card className="card-interactive">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-1">
               {recentActivity.map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                  className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                    <div className="relative">
+                      <div className="w-2.5 h-2.5 rounded-full bg-success" />
+                      <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-success animate-ping opacity-75" />
+                    </div>
                     <div>
-                      <p className="text-sm font-medium">{activity.location}</p>
+                      <p className="text-sm font-medium text-foreground">{activity.location}</p>
                       <p className="text-xs text-muted-foreground">{activity.device}</p>
                     </div>
                   </div>
