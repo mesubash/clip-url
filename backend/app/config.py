@@ -25,6 +25,7 @@ class Settings(BaseSettings):
         # Load from root .env file (one level up from backend/)
         env_file = "../.env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore extra fields like VITE_* variables
 
 
 @lru_cache()
