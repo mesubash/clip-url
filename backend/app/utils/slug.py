@@ -1,42 +1,67 @@
-import string
+import secrets
+import hashlib
+from typing import Optional
 
-# Base62 characters: 0-9, a-z, A-Z
-BASE62_CHARS = string.digits + string.ascii_lowercase + string.ascii_uppercase
+# Adjectives for readable slugs
+ADJECTIVES = [
+    "swift", "bright", "cool", "fast", "quick", "smart", "bold", "calm",
+    "crisp", "fresh", "keen", "neat", "pure", "safe", "warm", "wise",
+    "agile", "brave", "clear", "eager", "fair", "glad", "happy", "jolly",
+    "lucky", "merry", "noble", "proud", "royal", "sunny", "vivid", "witty",
+    "azure", "coral", "golden", "ivory", "jade", "lunar", "misty", "ocean",
+    "polar", "ruby", "silver", "terra", "ultra", "violet", "zen", "cosmic"
+]
 
+# Nouns for readable slugs
+NOUNS = [
+    "link", "clip", "byte", "node", "path", "wave", "spark", "pulse",
+    "beam", "flash", "glow", "peak", "star", "moon", "sun", "sky",
+    "cloud", "storm", "wind", "fire", "ice", "rock", "leaf", "tree",
+    "bird", "wolf", "fox", "hawk", "lion", "bear", "fish", "owl",
+    "river", "ocean", "shore", "coast", "hill", "vale", "mesa", "cove",
+    "pixel", "nexus", "prism", "orbit", "comet", "nova", "quark", "flux"
+]
 
-def id_to_base62(num: int) -> str:
-    """Convert a numeric ID to a Base62 string."""
-    if num == 0:
-        return BASE62_CHARS[0]
-    
-    result = []
-    base = len(BASE62_CHARS)
-    
-    while num > 0:
-        result.append(BASE62_CHARS[num % base])
-        num //= base
-    
-    return "".join(reversed(result))
-
-
-def base62_to_id(slug: str) -> int:
-    """Convert a Base62 string back to a numeric ID."""
-    num = 0
-    base = len(BASE62_CHARS)
-    
-    for char in slug:
-        num = num * base + BASE62_CHARS.index(char)
-    
-    return num
+# URL-safe characters for random suffix
+URL_SAFE_CHARS = "23456789abcdefghjkmnpqrstuvwxyz"  # Removed confusing chars: 0, 1, i, l, o
 
 
-def generate_slug(url_id: int, min_length: int = 6) -> str:
+def _random_suffix(length: int = 4) -> str:
+    """Generate a random URL-safe suffix."""
+    return "".join(secrets.choice(URL_SAFE_CHARS) for _ in range(length))
+
+
+def _hash_based_selection(url_id: int, items: list) -> str:
+    """Select an item from list based on ID hash for consistency."""
+    hash_val = int(hashlib.md5(str(url_id).encode()).hexdigest()[:8], 16)
+    return items[hash_val % len(items)]
+
+
+def generate_slug(url_id: int, style: str = "readable") -> str:
     """
-    Generate a unique slug from a URL ID.
+    Generate a unique, memorable slug for a URL.
     
-    The slug is padded to ensure a minimum length for consistency.
-    Adding a large offset ensures shorter IDs still produce reasonably long slugs.
+    Styles:
+    - 'readable': adjective-noun-suffix (e.g., swift-link-x7k9)
+    - 'short': Just random characters (e.g., x7k9m2p4)
+    - 'mixed': noun-suffix (e.g., spark-7k9m)
     """
-    # Add offset to ensure minimum length slugs
-    offset = 62 ** (min_length - 1)  # Ensures at least min_length characters
-    return id_to_base62(url_id + offset)
+    suffix = _random_suffix(4)
+    
+    if style == "readable":
+        # Use ID to deterministically pick words + random suffix for uniqueness
+        adj = _hash_based_selection(url_id, ADJECTIVES)
+        noun = _hash_based_selection(url_id * 31, NOUNS)  # Different hash for variety
+        return f"{adj}-{noun}-{suffix}"
+    
+    elif style == "mixed":
+        noun = _hash_based_selection(url_id, NOUNS)
+        return f"{noun}-{suffix}"
+    
+    else:  # short
+        return _random_suffix(8)
+
+
+def generate_random_slug(length: int = 8) -> str:
+    """Generate a purely random slug."""
+    return _random_suffix(length)
