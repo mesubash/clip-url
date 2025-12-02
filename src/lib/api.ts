@@ -4,6 +4,10 @@ const API_BASE_URL = import.meta.env.DEV
   ? "/api"
   : import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// Timeout values in milliseconds
+const DEFAULT_TIMEOUT = 15000; // 15 seconds for most requests
+const AUTH_TIMEOUT = 30000; // 30 seconds for auth (registration sends emails)
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -19,7 +23,16 @@ class ApiClient {
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { method = "GET", body, headers = {}, timeout = 10000 } = options;
+    // Use longer timeout for auth endpoints (email sending can be slow)
+    const isAuthEndpoint = endpoint.startsWith("/auth/");
+    const defaultTimeout = isAuthEndpoint ? AUTH_TIMEOUT : DEFAULT_TIMEOUT;
+
+    const {
+      method = "GET",
+      body,
+      headers = {},
+      timeout = defaultTimeout,
+    } = options;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);

@@ -4,10 +4,11 @@ import { Loader } from "@/components/shared/Loader";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -20,6 +21,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (requireAdmin && user?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

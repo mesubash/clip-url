@@ -60,10 +60,14 @@ async def seed_users():
                 name=user_data["name"],
                 email=user_data["email"],
                 password_hash=get_password_hash(user_data["password"]),
+                role="admin" if user_data.get("is_admin") else "user",
+                is_active=True,
+                email_verified=True,  # Seed users are pre-verified
             )
             db.add(user)
             await db.commit()
-            print(f"✅ Created user: {user_data['email']} (password: {user_data['password']})")
+            role_label = "admin" if user_data.get("is_admin") else "user"
+            print(f"✅ Created user: {user_data['email']} (password: {user_data['password']}, role: {role_label})")
 
     await engine.dispose()
     print("\n🎉 Seeding complete!")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link2, MousePointerClick, Globe, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useUrls, useDeleteUrl, useUpdateUrl } from "@/hooks/useUrls";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { URLData } from "@/lib/types";
 
 // Skeleton Components
@@ -56,19 +57,22 @@ const Dashboard = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
   
-  const { data, isLoading, error } = useUrls(searchQuery || undefined);
+  // Debounce search query to reduce API calls
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  
+  const { data, isLoading, error } = useUrls(debouncedSearch || undefined);
   const deleteUrl = useDeleteUrl();
   const updateUrl = useUpdateUrl();
 
   const urls = data?.urls || [];
   const totalClicks = data?.total_clicks || 0;
 
-  const handleEdit = (url: URLData) => {
+  const handleEdit = useCallback((url: URLData) => {
     setSelectedUrl(url);
     setEditModalOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     try {
       await deleteUrl.mutateAsync(id);
       toast({
@@ -82,9 +86,9 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [deleteUrl]);
 
-  const handleSaveEdit = async (editData: { alias: string; expiresAt?: string }) => {
+  const handleSaveEdit = useCallback(async (editData: { alias: string; expiresAt?: string }) => {
     if (selectedUrl) {
       try {
         await updateUrl.mutateAsync({
@@ -104,7 +108,16 @@ const Dashboard = () => {
         });
       }
     }
-  };
+  }, [selectedUrl, updateUrl]);
+
+  // Memoize formatted URL data to prevent recalculation on every render
+  const formattedUrls = useMemo(() => 
+    urls.map(url => ({
+      ...url,
+      formattedDate: new Date(url.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    })),
+    [urls]
+  );
 
   if (error) {
     return (
@@ -187,7 +200,7 @@ const Dashboard = () => {
               <URLCardSkeleton />
             </>
           ) : urls.length > 0 ? (
-            urls.map((url, index) => (
+            formattedUrls.map((url, index) => (
               <div
                 key={url.id}
                 className="animate-in-up"
@@ -198,7 +211,7 @@ const Dashboard = () => {
                   originalUrl={url.original_url}
                   shortUrl={url.short_url}
                   clicks={url.click_count}
-                  createdAt={new Date(url.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  createdAt={url.formattedDate}
                   onEdit={() => handleEdit(url)}
                   onDelete={() => handleDelete(url.id)}
                 />

@@ -1,10 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, Integer, ForeignKey, Text, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class URL(Base):
@@ -18,9 +22,9 @@ class URL(Base):
     )
     click_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="urls")
@@ -33,7 +37,7 @@ class Analytics(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     url_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("urls.id"), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -18,12 +18,21 @@ const VerifyEmail = () => {
   
   const [status, setStatus] = useState<VerificationStatus>(token ? "loading" : "no-token");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  
+  // Prevent double verification in React 18 Strict Mode
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     if (!token) {
       setStatus("no-token");
       return;
     }
+
+    // Skip if already verified (React 18 Strict Mode calls useEffect twice)
+    if (hasVerified.current) {
+      return;
+    }
+    hasVerified.current = true;
 
     const verifyEmail = async () => {
       try {

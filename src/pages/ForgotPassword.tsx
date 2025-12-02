@@ -6,16 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, AlertCircle } from "lucide-react";
 import { authService } from "@/lib/auth";
+import { validateEmail } from "@/lib/validation";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const emailResult = validateEmail(email);
+    if (!emailResult.isValid) {
+      setError(emailResult.error);
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -81,9 +90,19 @@ const ForgotPassword = () => {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(undefined);
+                }}
                 required
+                className={error ? "border-destructive" : ""}
               />
+              {error && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {error}
+                </p>
+              )}
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

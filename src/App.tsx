@@ -18,6 +18,8 @@ const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminTools = lazy(() => import("./pages/AdminTools"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -81,6 +83,22 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/tools"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminTools />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

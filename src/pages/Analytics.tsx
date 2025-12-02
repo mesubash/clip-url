@@ -127,14 +127,15 @@ function ActivitySkeleton() {
   );
 }
 
+// Static device icons mapping - defined outside component to prevent recreation
+const DEVICE_ICONS: Record<string, typeof Monitor> = {
+  Desktop: Monitor,
+  Mobile: Smartphone,
+  Tablet: Monitor,
+};
+
 const Analytics = () => {
   const { data: analytics, isLoading, error } = useUserAnalytics();
-
-  const deviceIcons: Record<string, typeof Monitor> = {
-    Desktop: Monitor,
-    Mobile: Smartphone,
-    Tablet: Monitor,
-  };
 
   return (
     <AppLayout>
@@ -304,7 +305,7 @@ const Analytics = () => {
               <CardContent className="space-y-5">
                 {analytics && analytics.devices.length > 0 ? (
                   analytics.devices.map((device) => {
-                    const Icon = deviceIcons[device.type] || Monitor;
+                    const Icon = DEVICE_ICONS[device.type] || Monitor;
                     return (
                       <div key={device.type} className="flex items-center gap-4">
                         <div className="w-11 h-11 rounded-xl bg-accent border border-primary/10 flex items-center justify-center">

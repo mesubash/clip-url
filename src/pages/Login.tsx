@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLoginButton } from "@/components/shared/GoogleLoginButton";
 import { authService } from "@/lib/auth";
+import { validateEmail, validatePassword } from "@/lib/validation";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,14 +18,37 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
   const location = useLocation();
   const { login, setUser } = useAuth();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
+  const validateForm = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
+    
+    const emailResult = validateEmail(email);
+    if (!emailResult.isValid) {
+      newErrors.email = emailResult.error;
+    }
+    
+    const passwordResult = validatePassword(password);
+    if (!passwordResult.isValid) {
+      newErrors.password = passwordResult.error;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -113,10 +137,19 @@ const Login = () => {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: undefined });
+                }}
                 required
-                className="h-11 input-focus"
+                className={`h-11 input-focus ${errors.email ? "border-destructive" : ""}`}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.email}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -134,9 +167,12 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors({ ...errors, password: undefined });
+                  }}
                   required
-                  className="h-11 pr-10 input-focus"
+                  className={`h-11 pr-10 input-focus ${errors.password ? "border-destructive" : ""}`}
                 />
                 <Button
                   type="button"
@@ -152,6 +188,12 @@ const Login = () => {
                   )}
                 </Button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.password}
+                </p>
+              )}
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4 pt-2">

@@ -1,6 +1,7 @@
 import secrets
+import asyncio
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +17,11 @@ from app.services.email_service import (
     send_welcome_email,
 )
 from app.services.oauth_service import GoogleUserInfo
+
+
+def _fire_and_forget(coro):
+    """Run a coroutine in the background without blocking."""
+    asyncio.create_task(coro)
 
 
 class AuthService:
@@ -92,9 +98,9 @@ class AuthService:
         await self.db.commit()
         await self.db.refresh(user)
 
-        # Send verification email
+        # Send verification email in background (don't block response)
         if send_verification:
-            await send_verification_email(user.email, user.name, verification_token)
+            _fire_and_forget(send_verification_email(user.email, user.name, verification_token))
 
         # Generate token
         access_token = create_access_token(user.id)
@@ -130,7 +136,7 @@ class AuthService:
         if not user:
             raise ValueError("Invalid verification token")
         
-        if user.verification_token_expires and user.verification_token_expires < datetime.utcnow():
+        if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
             raise ValueError("Verification token has expired")
         
         if user.is_verified:
@@ -142,8 +148,8 @@ class AuthService:
         await self.db.commit()
         await self.db.refresh(user)
         
-        # Send welcome email
-        await send_welcome_email(user.email, user.name)
+        # Send welcome email in background
+        _fire_and_forget(send_welcome_email(user.email, user.name))
         
         return UserResponse.model_validate(user)
 
@@ -163,7 +169,8 @@ class AuthService:
         user.verification_token_expires = get_token_expiry(hours=24)
         await self.db.commit()
         
-        await send_verification_email(user.email, user.name, user.verification_token)
+        # Send in background
+        _fire_and_forget(send_verification_email(user.email, user.name, user.verification_token))
         return True
 
     async def request_password_reset(self, email: str) -> bool:
@@ -184,7 +191,8 @@ class AuthService:
         user.reset_token_expires = get_token_expiry(hours=1)
         await self.db.commit()
         
-        await send_password_reset_email(user.email, user.name, user.reset_token)
+        # Send in background
+        _fire_and_forget(send_password_reset_email(user.email, user.name, user.reset_token))
         return True
 
     async def reset_password(self, token: str, new_password: str) -> bool:
@@ -194,7 +202,7 @@ class AuthService:
         if not user:
             raise ValueError("Invalid reset token")
         
-        if user.reset_token_expires and user.reset_token_expires < datetime.utcnow():
+        if user.reset_token_expires and user.reset_token_expires < datetime.now(timezone.utc):
             raise ValueError("Reset token has expired")
         
         user.password_hash = get_password_hash(new_password)
@@ -251,8 +259,8 @@ class AuthService:
                 await self.db.commit()
                 await self.db.refresh(user)
                 
-                # Send welcome email for new users
-                await send_welcome_email(user.email, user.name)
+                # Send welcome email in background for new users
+                _fire_and_forget(send_welcome_email(user.email, user.name))
         
         access_token = create_access_token(user.id)
         return Token(
@@ -301,7 +309,8 @@ class AuthService:
             user.is_verified = False
             user.verification_token = generate_token()
             user.verification_token_expires = get_token_expiry(hours=24)
-            await send_verification_email(user.email, user.name, user.verification_token)
+            # Send in background
+            _fire_and_forget(send_verification_email(user.email, user.name, user.verification_token))
 
         await self.db.commit()
         await self.db.refresh(user)

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo } from "react";
 import { ExternalLink, BarChart3, Pencil, Trash2, MoreVertical, Calendar, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "./CopyButton";
@@ -8,7 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
 interface URLCardProps {
@@ -22,7 +21,7 @@ interface URLCardProps {
   onDelete?: () => void;
 }
 
-export function URLCard({
+export const URLCard = memo(function URLCard({
   id,
   originalUrl,
   shortUrl,
@@ -32,17 +31,8 @@ export function URLCard({
   onEdit,
   onDelete,
 }: URLCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <div
-      className={cn(
-        "card-interactive p-4 group",
-        isHovered && "shadow-lg border-primary/20"
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="card-interactive p-4 group hover:shadow-lg hover:border-primary/20 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* URL Info */}
         <div className="flex-1 min-w-0 space-y-1.5">
@@ -105,4 +95,4 @@ export function URLCard({
       </div>
     </div>
   );
-}
+});

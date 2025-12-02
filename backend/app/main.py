@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import auth_router, urls_router, redirect_router
+from app.routers import auth_router, urls_router, redirect_router, admin_router
 
 settings = get_settings()
 
@@ -28,7 +28,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:8080", "http://localhost:5173"],
+    allow_origins=[settings.frontend_url, "http://localhost:8080", "http://localhost:5173", "http://localhost:8081"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(urls_router)
 app.include_router(redirect_router)
+app.include_router(admin_router)
 
 
 @app.get("/")

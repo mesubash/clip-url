@@ -1,10 +1,14 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class User(Base):
@@ -17,20 +21,24 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Nullable for OAuth users
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
+    
+    # Role and status
+    role: Mapped[str] = mapped_column(String(20), default="user", nullable=False)  # 'admin', 'user'
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
     # Email verification
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    verification_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    verification_token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # Password reset
     reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    reset_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reset_token_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # OAuth
     oauth_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 'google', etc.
@@ -42,3 +50,7 @@ class User(Base):
 
     # Relationships
     urls = relationship("URL", back_populates="user", cascade="all, delete-orphan")
+    
+    @property
+    def is_admin(self) -> bool:
+        return self.role == "admin"

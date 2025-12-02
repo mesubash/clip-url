@@ -7,12 +7,14 @@ import {
   LogIn,
   Menu,
   X,
-  Zap,
-  Scissors
+  Scissors,
+  Users,
+  Shield,
+  Database
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
@@ -20,7 +22,12 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", auth: true },
   { icon: BarChart3, label: "Analytics", path: "/analytics", auth: true },
   { icon: Settings, label: "Settings", path: "/settings", auth: true },
-];
+] as const;
+
+const adminNavItems = [
+  { icon: Users, label: "User Management", path: "/admin/users" },
+  { icon: Database, label: "Cleanup Tools", path: "/admin/tools" },
+] as const;
 
 export function Sidebar() {
   const location = useLocation();
@@ -28,13 +35,21 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
 
-  const handleLogout = async () => {
+  const isAdmin = user?.role === "admin";
+
+  const handleLogout = useCallback(async () => {
     await logout();
     navigate("/login");
     setMobileOpen(false);
-  };
+  }, [logout, navigate]);
 
-  const filteredNavItems = navItems.filter(item => !item.auth || isAuthenticated);
+  const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
+  const toggleMobileMenu = useCallback(() => setMobileOpen(prev => !prev), []);
+
+  const filteredNavItems = useMemo(
+    () => navItems.filter(item => !item.auth || isAuthenticated),
+    [isAuthenticated]
+  );
 
   return (
     <>
@@ -47,7 +62,7 @@ export function Sidebar() {
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => setMobileOpen(!mobileOpen)}
+          onClick={toggleMobileMenu}
           className="hover:bg-accent"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -58,7 +73,7 @@ export function Sidebar() {
       {mobileOpen && (
         <div 
           className="lg:hidden fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeMobileMenu}
         />
       )}
 
@@ -83,7 +98,7 @@ export function Sidebar() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={closeMobileMenu}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive 
@@ -99,32 +114,55 @@ export function Sidebar() {
                 </Link>
               );
             })}
-          </nav>
 
-          {/* Upgrade Card */}
-          <div className="p-3">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-primary" />
+            {/* Admin Section */}
+            {isAdmin && (
+              <>
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center gap-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <Shield className="w-3.5 h-3.5" />
+                    Admin
+                  </div>
                 </div>
-                <span className="font-semibold text-sm text-foreground">Go Pro</span>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Unlock unlimited links, custom domains & more
-              </p>
-              <Button size="sm" className="w-full gradient-primary text-primary-foreground text-xs h-8">
-                Upgrade Now
-              </Button>
-            </div>
-          </div>
+                {adminNavItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={closeMobileMenu}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                        isActive 
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-xs" 
+                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                      {item.label}
+                      {isActive && (
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+          </nav>
 
           {/* Footer */}
           <div className="p-3 border-t border-sidebar-border">
             {isAuthenticated ? (
               <div className="space-y-2">
                 <div className="px-3 py-2">
-                  <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                    {isAdmin && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
                 <button
@@ -138,7 +176,7 @@ export function Sidebar() {
             ) : (
               <Link
                 to="/login"
-                onClick={() => setMobileOpen(false)}
+                onClick={closeMobileMenu}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-all duration-200"
               >
                 <LogIn className="w-5 h-5" />

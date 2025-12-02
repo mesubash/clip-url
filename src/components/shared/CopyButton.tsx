@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,14 +10,14 @@ interface CopyButtonProps {
   size?: "default" | "sm" | "icon";
 }
 
-export function CopyButton({ value, className, variant = "ghost", size = "icon" }: CopyButtonProps) {
+export const CopyButton = memo(function CopyButton({ value, className, variant = "ghost", size = "icon" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(value);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }, [value]);
 
   return (
     <Button
@@ -33,4 +33,4 @@ export function CopyButton({ value, className, variant = "ghost", size = "icon" 
       )}
     </Button>
   );
-}
+});

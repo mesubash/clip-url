@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ interface StatsCardProps {
   className?: string;
 }
 
-export function StatsCard({ title, value, icon: Icon, trend, className }: StatsCardProps) {
+export const StatsCard = memo(function StatsCard({ title, value, icon: Icon, trend, className }: StatsCardProps) {
   return (
     <div className={cn(
       "card-interactive p-5 group",
@@ -40,4 +41,4 @@ export function StatsCard({ title, value, icon: Icon, trend, className }: StatsC
       </div>
     </div>
   );
-}
+});

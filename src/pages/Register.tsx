@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Check, AlertCircle, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLoginButton } from "@/components/shared/GoogleLoginButton";
 import { authService } from "@/lib/auth";
+import { validateEmail, validateName, validatePasswordStrength } from "@/lib/validation";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -18,11 +19,40 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const navigate = useNavigate();
   const { register, setUser } = useAuth();
 
+  const passwordStrength = validatePasswordStrength(password);
+
+  const validateForm = (): boolean => {
+    const newErrors: { name?: string; email?: string; password?: string } = {};
+    
+    const nameResult = validateName(name);
+    if (!nameResult.isValid) {
+      newErrors.name = nameResult.error;
+    }
+    
+    const emailResult = validateEmail(email);
+    if (!emailResult.isValid) {
+      newErrors.email = emailResult.error;
+    }
+    
+    if (!passwordStrength.isValid) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -72,8 +102,6 @@ const Register = () => {
     });
   };
 
-  const passwordStrength = password.length >= 8;
-
   return (
     <AuthLayout>
       <Card className="w-full max-w-md card-elevated animate-in-scale border-0 shadow-xl">
@@ -113,10 +141,19 @@ const Register = () => {
                 type="text"
                 placeholder="John Doe"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
                 required
-                className="h-11 input-focus"
+                className={`h-11 input-focus ${errors.name ? "border-destructive" : ""}`}
               />
+              {errors.name && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.name}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">Email</Label>
@@ -125,10 +162,19 @@ const Register = () => {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: undefined });
+                }}
                 required
-                className="h-11 input-focus"
+                className={`h-11 input-focus ${errors.email ? "border-destructive" : ""}`}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.email}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
@@ -138,9 +184,12 @@ const Register = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors({ ...errors, password: undefined });
+                  }}
                   required
-                  className="h-11 pr-10 input-focus"
+                  className={`h-11 pr-10 input-focus ${errors.password ? "border-destructive" : ""}`}
                 />
                 <Button
                   type="button"
@@ -156,13 +205,46 @@ const Register = () => {
                   )}
                 </Button>
               </div>
-              <div className="flex items-center gap-2 mt-2">
-                <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passwordStrength ? 'bg-success' : 'bg-muted'}`}>
-                  {passwordStrength && <Check className="w-3 h-3 text-success-foreground" />}
+              {errors.password && (
+                <p className="text-sm text-destructive flex items-center gap-1 mb-2">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.password}
+                </p>
+              )}
+              {/* Password strength indicators */}
+              <div className="space-y-1.5 mt-2">
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passwordStrength.requirements.length ? 'bg-green-500' : 'bg-muted'}`}>
+                    {passwordStrength.requirements.length ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-muted-foreground" />}
+                  </div>
+                  <span className={`text-xs transition-colors ${passwordStrength.requirements.length ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    At least 8 characters
+                  </span>
                 </div>
-                <span className={`text-xs transition-colors ${passwordStrength ? 'text-success' : 'text-muted-foreground'}`}>
-                  At least 8 characters
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passwordStrength.requirements.uppercase ? 'bg-green-500' : 'bg-muted'}`}>
+                    {passwordStrength.requirements.uppercase ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-muted-foreground" />}
+                  </div>
+                  <span className={`text-xs transition-colors ${passwordStrength.requirements.uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    One uppercase letter
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passwordStrength.requirements.number ? 'bg-green-500' : 'bg-muted'}`}>
+                    {passwordStrength.requirements.number ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-muted-foreground" />}
+                  </div>
+                  <span className={`text-xs transition-colors ${passwordStrength.requirements.number ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    One number
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${passwordStrength.requirements.special ? 'bg-green-500' : 'bg-muted'}`}>
+                    {passwordStrength.requirements.special ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-muted-foreground" />}
+                  </div>
+                  <span className={`text-xs transition-colors ${passwordStrength.requirements.special ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    One special character
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>

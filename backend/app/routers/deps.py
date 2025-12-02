@@ -63,3 +63,26 @@ async def get_optional_user(
         return await get_current_user(request, credentials, db)
     except HTTPException:
         return None
+
+
+async def get_current_admin_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Get the current authenticated admin user."""
+    user = await get_current_user(request, credentials, db)
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated",
+        )
+    
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    
+    return user

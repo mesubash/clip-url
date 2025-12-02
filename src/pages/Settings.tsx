@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -230,6 +231,12 @@ const Settings = () => {
                   )}
                 </Button>
               </div>
+              <Link 
+                to="/forgot-password" 
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                Forgot your password?
+              </Link>
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>

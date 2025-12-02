@@ -24,9 +24,52 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     oauth_provider: str | None = None
     avatar_url: str | None = None
+    role: str = "user"
+    is_active: bool = True
 
     class Config:
         from_attributes = True
+
+
+# Admin schemas
+class UserListResponse(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    created_at: datetime
+    is_verified: bool
+    oauth_provider: str | None = None
+    avatar_url: str | None = None
+    role: str
+    is_active: bool
+    url_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUserCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+    role: str = "user"
+    is_verified: bool = False
+
+
+class AdminUserUpdate(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=255)
+    email: EmailStr | None = None
+    role: str | None = None
+    is_active: bool | None = None
+    is_verified: bool | None = None
+
+
+class PaginatedUsersResponse(BaseModel):
+    users: list[UserListResponse]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
 
 
 class Token(BaseModel):
