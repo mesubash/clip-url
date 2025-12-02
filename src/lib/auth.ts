@@ -7,6 +7,10 @@ import type {
   PasswordChange,
 } from "./types";
 
+interface MessageResponse {
+  message: string;
+}
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<User> {
     // Backend sets HTTP-only cookie, returns user data
@@ -41,5 +45,34 @@ export const authService = {
   async logout(): Promise<void> {
     // Call backend to clear the HTTP-only cookie
     await api.post("/auth/logout");
+  },
+
+  // Email verification
+  async verifyEmail(token: string): Promise<User> {
+    return api.post<User>("/auth/verify-email", { token });
+  },
+
+  async resendVerificationEmail(email: string): Promise<MessageResponse> {
+    return api.post<MessageResponse>("/auth/resend-verification", { email });
+  },
+
+  // Password reset
+  async forgotPassword(email: string): Promise<MessageResponse> {
+    return api.post<MessageResponse>("/auth/forgot-password", { email });
+  },
+
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<MessageResponse> {
+    return api.post<MessageResponse>("/auth/reset-password", {
+      token,
+      new_password: newPassword,
+    });
+  },
+
+  // Google OAuth
+  async googleAuth(credential: string): Promise<User> {
+    return api.post<User>("/auth/google", { credential });
   },
 };

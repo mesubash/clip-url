@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -20,6 +21,15 @@ class Settings(BaseSettings):
     
     # Short URL
     base_url: str = "http://localhost:8000"
+    
+    # Email (Resend)
+    resend_api_key: Optional[str] = None
+    email_from: str = "noreply@clipurl.com.np"
+    email_from_name: str = "ClipURL"
+    
+    # Google OAuth
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
     
     class Config:
         # Load from root .env file (one level up from backend/)

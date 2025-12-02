@@ -1,15 +1,14 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Home, 
   LayoutDashboard, 
   BarChart3, 
   Settings, 
-  Link2, 
   LogOut,
   LogIn,
   Menu,
   X,
-  Zap
+  Zap,
+  Scissors
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
-  { icon: Home, label: "Shorten", path: "/" },
+  { icon: Scissors, label: "Create Link", path: "/" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", auth: true },
   { icon: BarChart3, label: "Analytics", path: "/analytics", auth: true },
   { icon: Settings, label: "Settings", path: "/settings", auth: true },
@@ -42,10 +41,8 @@ export function Sidebar() {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/80 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Link2 className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-foreground">Shortify</span>
+          <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
+          <span className="font-bold text-foreground">ClipURL</span>
         </Link>
         <Button 
           variant="ghost" 
@@ -74,10 +71,8 @@ export function Sidebar() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-              <Link2 className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-foreground">Shortify</span>
+            <img src="/clipurl.png" alt="ClipURL" className="w-9 h-9 rounded-xl" />
+            <span className="font-bold text-foreground">ClipURL</span>
           </div>
 
           {/* Navigation */}

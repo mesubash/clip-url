@@ -73,7 +73,7 @@ const Dashboard = () => {
       await deleteUrl.mutateAsync(id);
       toast({
         title: "Link deleted",
-        description: "The shortened URL has been removed",
+        description: "The clipped URL has been removed",
       });
     } catch (error) {
       toast({
@@ -125,7 +125,7 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Manage and track your shortened URLs</p>
+            <p className="text-muted-foreground">Manage and track your clipped URLs</p>
           </div>
           <Link to="/">
             <Button className="gradient-primary btn-glow text-primary-foreground">
@@ -211,7 +211,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-1">No links found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery ? "Try a different search term" : "Create your first shortened URL"}
+                {searchQuery ? "Try a different search term" : "Create your first clipped URL"}
               </p>
               {!searchQuery && (
                 <Link to="/">

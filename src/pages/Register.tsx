@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { GoogleLoginButton } from "@/components/shared/GoogleLoginButton";
+import { authService } from "@/lib/auth";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -15,8 +17,9 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +29,7 @@ const Register = () => {
       await register(name, email, password);
       toast({
         title: "Account created!",
-        description: "Welcome to ClipURL. Start shortening your links!",
+        description: "Welcome to ClipURL. Check your email to verify your account!",
       });
       navigate("/dashboard");
     } catch (error) {
@@ -40,6 +43,35 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credential: string) => {
+    setIsGoogleLoading(true);
+    try {
+      const user = await authService.googleAuth(credential);
+      setUser(user);
+      toast({
+        title: "Welcome!",
+        description: "Your account has been created with Google",
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Google sign-up failed",
+        description: error instanceof Error ? error.message : "Failed to sign up with Google",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    toast({
+      title: "Google sign-up error",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
   const passwordStrength = password.length >= 8;
 
   return (
@@ -48,11 +80,32 @@ const Register = () => {
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Start shortening your links today
+            Start clipping your links today
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5 pt-4">
+            {/* Google OAuth Button */}
+            <div className="space-y-4">
+              <GoogleLoginButton
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                disabled={isLoading || isGoogleLoading}
+                text="signup_with"
+              />
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with email
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">Name</Label>
               <Input
@@ -117,7 +170,7 @@ const Register = () => {
             <Button 
               type="submit" 
               className="w-full h-11 gradient-primary btn-glow text-primary-foreground font-medium" 
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

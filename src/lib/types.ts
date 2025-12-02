@@ -5,6 +5,9 @@ export interface User {
   email: string;
   created_at: string;
   api_key?: string | null;
+  is_verified?: boolean;
+  oauth_provider?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface LoginCredentials {

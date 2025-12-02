@@ -19,8 +19,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.app_name,
-    description="A modern, high-performance URL shortener API",
+    title="ClipURL API",
+    description="A modern, high-performance URL shortener API by ClipURL",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Mail } from "lucide-react";
+import { authService } from "@/lib/auth";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -17,16 +18,23 @@ const ForgotPassword = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    setSent(true);
-    toast({
-      title: "Email sent!",
-      description: "Check your inbox for reset instructions",
-    });
-    
-    setIsLoading(false);
+    try {
+      await authService.forgotPassword(email);
+      setSent(true);
+      toast({
+        title: "Email sent!",
+        description: "Check your inbox for reset instructions",
+      });
+    } catch (error: any) {
+      // Still show success to prevent email enumeration
+      setSent(true);
+      toast({
+        title: "Email sent!",
+        description: "If an account exists, you'll receive reset instructions",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (sent) {
@@ -93,7 +101,7 @@ const ForgotPassword = () => {
         </form>
       </Card>
     </AuthLayout>
-  );
+    );
 };
 
 export default ForgotPassword;

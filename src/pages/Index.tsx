@@ -29,7 +29,7 @@ const Index = () => {
     if (!longUrl) {
       toast({
         title: "Please enter a URL",
-        description: "Enter a valid URL to shorten",
+        description: "Enter a valid URL to clip",
         variant: "destructive",
       });
       return;
@@ -39,7 +39,7 @@ const Index = () => {
     if (!isAuthenticated) {
       toast({
         title: "Sign in required",
-        description: "Please sign in to create shortened URLs",
+        description: "Please sign in to create clipped URLs",
       });
       navigate("/login");
       return;
@@ -85,14 +85,14 @@ const Index = () => {
             <div className="text-center space-y-4 animate-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent border border-primary/10 text-accent-foreground text-sm font-medium shadow-xs">
                 <Sparkles className="w-4 h-4 text-primary" />
-                Simple & Fast
+                Fast & Reliable
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-                Shorten your{" "}
+                Clip your{" "}
                 <span className="gradient-text">links</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                Create short, memorable links in seconds. Track clicks and analyze your audience.
+                Transform long URLs into short, memorable links. Track performance with powerful analytics.
               </p>
             </div>
 
@@ -124,7 +124,7 @@ const Index = () => {
                       Custom Alias <span className="text-muted-foreground font-normal">(optional)</span>
                     </Label>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap px-3 py-2 bg-muted rounded-lg">shrt.io/</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap px-3 py-2 bg-muted rounded-lg">clipurl.com.np/</span>
                       <Input
                         id="alias"
                         placeholder="my-link"
@@ -149,7 +149,7 @@ const Index = () => {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Shorten URL
+                        Clip URL
                         <ArrowRight className="w-5 h-5" />
                       </span>
                     )}
@@ -197,7 +197,7 @@ const Index = () => {
                   </div>
 
                   <Button variant="outline" onClick={handleReset} className="w-full h-11">
-                    Shorten Another URL
+                    Clip Another URL
                   </Button>
                 </div>
               )}

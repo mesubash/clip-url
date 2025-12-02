@@ -10,8 +10,14 @@ from app.schemas import (
     Token,
     PasswordChange,
     ProfileUpdate,
+    ResendVerificationRequest,
+    VerifyEmailRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    GoogleAuthRequest,
+    MessageResponse,
 )
-from app.services import AuthService
+from app.services import AuthService, verify_google_id_token, GoogleOAuthError
 from app.routers.deps import get_current_user
 from app.models import User
 
@@ -53,7 +59,7 @@ async def register(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """Register a new user."""
+    """Register a new user. Sends verification email."""
     service = AuthService(db)
     try:
         token_data = await service.create_user(user_data)
@@ -79,12 +85,109 @@ async def login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/logout")
+@router.post("/logout", response_model=MessageResponse)
 async def logout(response: Response):
     """Clear auth cookie and log out."""
     clear_auth_cookie(response)
     return {"message": "Successfully logged out"}
 
+
+# ==================
+# Email Verification
+# ==================
+
+@router.post("/verify-email", response_model=UserResponse)
+async def verify_email(
+    data: VerifyEmailRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify user's email address."""
+    service = AuthService(db)
+    try:
+        user = await service.verify_email(data.token)
+        # Set cookie so user is logged in after verification
+        from app.utils import create_access_token
+        token = create_access_token(user.id)
+        set_auth_cookie(response, token)
+        return user
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+async def resend_verification(
+    data: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resend verification email."""
+    service = AuthService(db)
+    try:
+        await service.resend_verification_email(data.email)
+        return {"message": "If an account exists with this email, a verification link has been sent."}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ==============
+# Password Reset
+# ==============
+
+@router.post("/forgot-password", response_model=MessageResponse)
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Request password reset email."""
+    service = AuthService(db)
+    await service.request_password_reset(data.email)
+    return {"message": "If an account exists with this email, a password reset link has been sent."}
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset password using token."""
+    service = AuthService(db)
+    try:
+        await service.reset_password(data.token, data.new_password)
+        return {"message": "Password has been reset successfully."}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ============
+# Google OAuth
+# ============
+
+@router.post("/google", response_model=UserResponse)
+async def google_auth(
+    data: GoogleAuthRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """Authenticate with Google. Handles both new and existing users."""
+    try:
+        # Verify the Google ID token
+        google_user = await verify_google_id_token(data.credential)
+        
+        # Authenticate or create user
+        service = AuthService(db)
+        token_data = await service.authenticate_google_user(google_user)
+        
+        set_auth_cookie(response, token_data.access_token)
+        return token_data.user
+    except GoogleOAuthError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ================
+# User Management
+# ================
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
@@ -106,7 +209,7 @@ async def update_profile(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/change-password")
+@router.post("/change-password", response_model=MessageResponse)
 async def change_password(
     data: PasswordChange,
     current_user: User = Depends(get_current_user),
@@ -132,7 +235,7 @@ async def generate_api_key(
     return {"api_key": api_key}
 
 
-@router.delete("/api-key")
+@router.delete("/api-key", response_model=MessageResponse)
 async def revoke_api_key(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

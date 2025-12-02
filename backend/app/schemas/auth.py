@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
 
 class UserCreate(BaseModel):
@@ -20,6 +21,9 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime
     api_key: str | None = None
+    is_verified: bool = False
+    oauth_provider: str | None = None
+    avatar_url: str | None = None
 
     class Config:
         from_attributes = True
@@ -44,3 +48,38 @@ class PasswordChange(BaseModel):
 class ProfileUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=255)
     email: EmailStr | None = None
+
+
+# Email verification
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+# Password reset
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
+# Google OAuth
+class GoogleAuthRequest(BaseModel):
+    """For frontend SDK flow - receives ID token directly."""
+    credential: str  # Google ID token from frontend
+
+
+class GoogleAuthCallbackRequest(BaseModel):
+    """For server-side OAuth flow - receives authorization code."""
+    code: str
+    redirect_uri: str
+
+
+class MessageResponse(BaseModel):
+    message: str

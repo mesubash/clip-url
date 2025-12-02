@@ -8,15 +8,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { GoogleLoginButton } from "@/components/shared/GoogleLoginButton";
+import { authService } from "@/lib/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -42,6 +45,35 @@ const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credential: string) => {
+    setIsGoogleLoading(true);
+    try {
+      const user = await authService.googleAuth(credential);
+      setUser(user);
+      toast({
+        title: "Welcome!",
+        description: "You have successfully signed in with Google",
+      });
+      navigate(from, { replace: true });
+    } catch (error) {
+      toast({
+        title: "Google sign-in failed",
+        description: error instanceof Error ? error.message : "Failed to sign in with Google",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    toast({
+      title: "Google sign-in error",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
   return (
     <AuthLayout>
       <Card className="w-full max-w-md card-elevated animate-in-scale border-0 shadow-xl">
@@ -53,6 +85,27 @@ const Login = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5 pt-4">
+            {/* Google OAuth Button */}
+            <div className="space-y-4">
+              <GoogleLoginButton
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                disabled={isLoading || isGoogleLoading}
+                text="signin_with"
+              />
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with email
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
@@ -105,7 +158,7 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full h-11 gradient-primary btn-glow text-primary-foreground font-medium" 
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
