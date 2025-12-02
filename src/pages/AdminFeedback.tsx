@@ -61,8 +61,8 @@ const statusConfig = {
 
 const AdminFeedback = () => {
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackAdmin | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
@@ -71,8 +71,8 @@ const AdminFeedback = () => {
   const { data: stats } = useFeedbackStats();
   const { data: feedback, isLoading } = useAllFeedback(
     page,
-    statusFilter || undefined,
-    typeFilter || undefined
+    statusFilter === "all" ? undefined : statusFilter,
+    typeFilter === "all" ? undefined : typeFilter
   );
   const updateFeedback = useUpdateFeedback();
   const deleteFeedback = useDeleteFeedback();
@@ -186,7 +186,7 @@ const AdminFeedback = () => {
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="reviewed">Reviewed</SelectItem>
               <SelectItem value="resolved">Resolved</SelectItem>
@@ -199,7 +199,7 @@ const AdminFeedback = () => {
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="suggestion">Suggestion</SelectItem>
               <SelectItem value="complaint">Complaint</SelectItem>
               <SelectItem value="bug">Bug Report</SelectItem>
