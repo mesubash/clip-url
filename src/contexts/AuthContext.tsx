@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { authService } from "@/lib/auth";
 import type { User } from "@/lib/types";
 
@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -18,18 +18,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
-      if (authService.isAuthenticated()) {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-      }
+      // Try to get current user - if cookie exists and is valid, this will work
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
     } catch {
-      // Token might be invalid, clear it
-      authService.logout();
+      // No valid session
       setUser(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -37,20 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     };
     initAuth();
-  }, []);
+  }, [refreshUser]);
 
   const login = async (email: string, password: string) => {
-    const response = await authService.login({ email, password });
-    setUser(response.user);
+    const userData = await authService.login({ email, password });
+    setUser(userData);
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const response = await authService.register({ name, email, password });
-    setUser(response.user);
+    const userData = await authService.register({ name, email, password });
+    setUser(userData);
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Ignore errors on logout
+    }
     setUser(null);
   };
 

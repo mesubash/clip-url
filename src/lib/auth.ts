@@ -1,6 +1,5 @@
 import { api } from "./api";
 import type {
-  AuthResponse,
   LoginCredentials,
   RegisterData,
   User,
@@ -9,16 +8,14 @@ import type {
 } from "./types";
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/login", credentials);
-    localStorage.setItem("access_token", response.access_token);
-    return response;
+  async login(credentials: LoginCredentials): Promise<User> {
+    // Backend sets HTTP-only cookie, returns user data
+    return api.post<User>("/auth/login", credentials);
   },
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/register", data);
-    localStorage.setItem("access_token", response.access_token);
-    return response;
+  async register(data: RegisterData): Promise<User> {
+    // Backend sets HTTP-only cookie, returns user data
+    return api.post<User>("/auth/register", data);
   },
 
   async getCurrentUser(): Promise<User> {
@@ -41,11 +38,8 @@ export const authService = {
     await api.delete("/auth/api-key");
   },
 
-  logout(): void {
-    localStorage.removeItem("access_token");
-  },
-
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem("access_token");
+  async logout(): Promise<void> {
+    // Call backend to clear the HTTP-only cookie
+    await api.post("/auth/logout");
   },
 };
