@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from user_agents import parse
@@ -111,7 +111,7 @@ class AnalyticsService:
         unique_visitors = unique_visitors_result.scalar() or 0
 
         # Click data for last 7 days
-        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
         click_data = await self._get_click_data(filter_condition, seven_days_ago)
 
         # Average daily clicks
@@ -216,12 +216,15 @@ class AnalyticsService:
         )
         rows = result.scalars().all()
         
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         activities = []
         
         for row in rows:
-            # Calculate time ago
-            diff = now - row.timestamp
+            # Calculate time ago - handle both timezone-aware and naive datetimes
+            timestamp = row.timestamp
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+            diff = now - timestamp
             if diff.seconds < 60:
                 time_ago = "Just now"
             elif diff.seconds < 3600:

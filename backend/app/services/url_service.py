@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -131,8 +131,12 @@ class URLService:
             return None
 
         # Check if URL is expired
-        if url.expires_at and url.expires_at < datetime.utcnow():
-            return None
+        if url.expires_at:
+            expires_at = url.expires_at
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at < datetime.now(timezone.utc):
+                return None
 
         url.click_count += 1
         await self.db.commit()

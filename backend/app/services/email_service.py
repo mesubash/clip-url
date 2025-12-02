@@ -1,7 +1,7 @@
 import httpx
 from typing import Optional
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.config import get_settings
 
@@ -114,7 +114,7 @@ def generate_token() -> str:
 
 def get_token_expiry(hours: int = 24) -> datetime:
     """Get expiry datetime for a token."""
-    return datetime.utcnow() + timedelta(hours=hours)
+    return datetime.now(timezone.utc) + timedelta(hours=hours)
 
 
 async def send_email(
