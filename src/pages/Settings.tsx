@@ -4,14 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { Key, RefreshCw, Trash2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/lib/auth";
 
+// Skeleton for settings cards
+function SettingsCardSkeleton({ rows = 2 }: { rows?: number }) {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-4 w-48 mt-1" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+        <Skeleton className="h-10 w-32" />
+      </CardContent>
+    </Card>
+  );
+}
+
 const Settings = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isLoading: authLoading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -118,6 +140,23 @@ const Settings = () => {
       setIsLoading(false);
     }
   };
+
+  // Show skeleton while auth is loading
+  if (authLoading) {
+    return (
+      <AppLayout>
+        <div className="p-6 md:p-8 space-y-8 max-w-3xl mx-auto">
+          <div>
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-56 mt-2" />
+          </div>
+          <SettingsCardSkeleton rows={2} />
+          <SettingsCardSkeleton rows={2} />
+          <SettingsCardSkeleton rows={1} />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
