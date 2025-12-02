@@ -6,11 +6,50 @@ import { Input } from "@/components/ui/input";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { URLCard } from "@/components/shared/URLCard";
 import { EditURLModal } from "@/components/shared/EditURLModal";
-import { Loader } from "@/components/shared/Loader";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useUrls, useDeleteUrl, useUpdateUrl } from "@/hooks/useUrls";
 import type { URLData } from "@/lib/types";
+
+// Skeleton Components
+function StatsCardSkeleton() {
+  return (
+    <Card className="card-interactive">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-xl" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function URLCardSkeleton() {
+  return (
+    <Card className="card-interactive">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,21 +137,31 @@ const Dashboard = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatsCard
-            title="Total Links"
-            value={urls.length}
-            icon={Link2}
-          />
-          <StatsCard
-            title="Total Clicks"
-            value={totalClicks.toLocaleString()}
-            icon={MousePointerClick}
-          />
-          <StatsCard
-            title="Active Links"
-            value={urls.length}
-            icon={Globe}
-          />
+          {isLoading ? (
+            <>
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+            </>
+          ) : (
+            <>
+              <StatsCard
+                title="Total Links"
+                value={urls.length}
+                icon={Link2}
+              />
+              <StatsCard
+                title="Total Clicks"
+                value={totalClicks.toLocaleString()}
+                icon={MousePointerClick}
+              />
+              <StatsCard
+                title="Active Links"
+                value={urls.length}
+                icon={Globe}
+              />
+            </>
+          )}
         </div>
 
         {/* Search & Filter */}
@@ -131,9 +180,12 @@ const Dashboard = () => {
         {/* URL List */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="flex justify-center py-16">
-              <Loader size="lg" />
-            </div>
+            <>
+              <URLCardSkeleton />
+              <URLCardSkeleton />
+              <URLCardSkeleton />
+              <URLCardSkeleton />
+            </>
           ) : urls.length > 0 ? (
             urls.map((url, index) => (
               <div
