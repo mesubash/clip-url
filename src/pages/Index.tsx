@@ -63,6 +63,26 @@ const Index = () => {
       return;
     }
 
+    // Validate custom alias length (min 3 characters)
+    if (customAlias && customAlias.length < 3) {
+      toast({
+        title: "Alias too short",
+        description: "Custom alias must be at least 3 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate custom alias format
+    if (customAlias && !/^[a-zA-Z0-9_-]+$/.test(customAlias)) {
+      toast({
+        title: "Invalid alias",
+        description: "Alias can only contain letters, numbers, hyphens, and underscores",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // If not authenticated, redirect to login
     if (!isAuthenticated) {
       toast({
@@ -162,8 +182,13 @@ const Index = () => {
                         value={customAlias}
                         onChange={(e) => setCustomAlias(e.target.value)}
                         className="h-12 input-focus"
+                        minLength={3}
+                        maxLength={50}
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Min 3 characters. Letters, numbers, hyphens, and underscores only.
+                    </p>
                   </div>
 
                   {/* Expiration Date Input */}
