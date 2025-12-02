@@ -31,24 +31,28 @@ COOKIE_MAX_AGE = settings.access_token_expire_minutes * 60  # Convert to seconds
 
 def set_auth_cookie(response: Response, token: str):
     """Set HTTP-only secure cookie with the access token."""
+    # Use SameSite=None for cross-origin requests (frontend and backend on different domains)
+    # Secure must be True when SameSite=None
+    is_production = not settings.debug
     response.set_cookie(
         key=COOKIE_NAME,
         value=token,
         max_age=COOKIE_MAX_AGE,
         httponly=True,
-        secure=not settings.debug,  # Secure only in production (HTTPS)
-        samesite="lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         path="/",
     )
 
 
 def clear_auth_cookie(response: Response):
     """Clear the auth cookie."""
+    is_production = not settings.debug
     response.delete_cookie(
         key=COOKIE_NAME,
         httponly=True,
-        secure=not settings.debug,
-        samesite="lax",
+        secure=is_production,
+        samesite="none" if is_production else "lax",
         path="/",
     )
 
