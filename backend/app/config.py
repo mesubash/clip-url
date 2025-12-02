@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     base_url: str = "http://localhost:8000"
     
     class Config:
-        env_file = ".env"
+        # Load from root .env file (one level up from backend/)
+        env_file = "../.env"
         env_file_encoding = "utf-8"
 
 

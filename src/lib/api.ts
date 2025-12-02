@@ -37,7 +37,9 @@ class ApiClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, config);
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "An error occurred" }));
+      const error = await response
+        .json()
+        .catch(() => ({ detail: "An error occurred" }));
       throw new Error(error.detail || "Request failed");
     }
 

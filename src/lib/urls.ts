@@ -14,7 +14,9 @@ export const urlService = {
   },
 
   async getUrls(search?: string): Promise<URLListResponse> {
-    const endpoint = search ? `/urls?search=${encodeURIComponent(search)}` : "/urls";
+    const endpoint = search
+      ? `/urls?search=${encodeURIComponent(search)}`
+      : "/urls";
     return api.get<URLListResponse>(endpoint);
   },
 

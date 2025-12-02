@@ -26,7 +26,7 @@ export function useUrlStats() {
 
 export function useCreateUrl() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: URLCreate) => urlService.createUrl(data),
     onSuccess: () => {
@@ -38,9 +38,9 @@ export function useCreateUrl() {
 
 export function useUpdateUrl() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: URLUpdate }) => 
+    mutationFn: ({ id, data }: { id: number; data: URLUpdate }) =>
       urlService.updateUrl(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["urls"] });
@@ -50,7 +50,7 @@ export function useUpdateUrl() {
 
 export function useDeleteUrl() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: number) => urlService.deleteUrl(id),
     onSuccess: () => {
